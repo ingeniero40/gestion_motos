@@ -227,7 +227,7 @@ def create_app():
             motorcycle_service.update_by_id(moto.id, moto.to_dict())
 
             # Detección de exceso de velocidad para la alerta visual inmediata
-            speed_alert = max_speed > 50
+            speed_alert = max_speed > 60
 
             # Recargar datos para renderizar con la alerta
             all_trips = trip_service.get_by_motorcycle_id(moto.id)
