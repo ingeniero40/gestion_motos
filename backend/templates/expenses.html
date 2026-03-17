@@ -1,0 +1,235 @@
+{% extends "base.html" %} {% block title %}Gastos | MotoLog{% endblock %} {%
+block content %}
+<header class="fade-in" style="animation-delay: 0.1s">
+  <h1 class="page-title">Registro de Gastos</h1>
+  <p class="text-muted mb-4">Control financiero de tu motocicleta.</p>
+</header>
+
+<section class="fade-in" style="animation-delay: 0.2s">
+  <!-- Monthly Summary -->
+  <div class="card" style="text-align: center; padding: 24px 20px">
+    <span
+      class="text-muted"
+      style="font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px"
+      >Balance General</span
+    >
+    <div class="card-value" style="font-size: 2.5rem; margin: 12px 0">
+      ${{ "{:,.2f}".format(total_month) }}
+    </div>
+    <div
+      style="
+        display: flex;
+        justify-content: center;
+        gap: 16px;
+        margin-top: 16px;
+      "
+    >
+      <div style="display: flex; align-items: center; gap: 6px">
+        <span class="text-muted" style="font-size: 0.8rem"
+          >Acumulado del mes</span
+        >
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Expense Form -->
+  <div
+    class="card fade-in mb-4 mt-4"
+    style="
+      padding: 16px;
+      animation-delay: 0.25s;
+      border: 1px dashed var(--border-color);
+    "
+  >
+    <h4 style="margin: 0 0 16px 0">Registrar Gasto</h4>
+    <form
+      action="{{ url_for('expenses_view') }}"
+      method="POST"
+      style="display: flex; flex-direction: column; gap: 12px"
+    >
+      <input
+        type="text"
+        name="description"
+        placeholder="Descripción (ej. Estación Shell)"
+        required
+        class="form-control"
+        style="
+          padding: 10px;
+          border-radius: 8px;
+          border: 1px solid var(--border-color);
+          background: var(--bg-primary);
+          color: var(--text-primary);
+        "
+      />
+      <div style="display: flex; gap: 8px">
+        <input
+          type="number"
+          step="0.01"
+          name="amount"
+          placeholder="Monto ($)"
+          required
+          class="form-control"
+          style="
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+          "
+        />
+        <input
+          type="date"
+          name="date"
+          required
+          class="form-control"
+          style="
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+          "
+        />
+      </div>
+      <div style="display: flex; gap: 8px">
+        <select
+          id="expenseCategory"
+          name="category"
+          class="form-control"
+          style="
+            flex: 2;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+          "
+          onchange="toggleLiters()"
+        >
+          <option value="Combustible">Combustible</option>
+          <option value="Accesorios">Accesorios</option>
+          <option value="Peajes">Peajes</option>
+          <option value="Otros">Otros</option>
+        </select>
+        <input
+          id="litersInput"
+          type="number"
+          step="0.01"
+          name="liters"
+          placeholder="Galones (Gal)"
+          class="form-control"
+          style="
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+          "
+        />
+      </div>
+      <button type="submit" class="btn btn-primary mt-2">Guardar Gasto</button>
+    </form>
+  </div>
+
+  <!-- Expense List -->
+  <div class="flex-between mb-2">
+    <h3 style="font-size: 1.1rem; font-weight: 500">Transacciones</h3>
+  </div>
+
+  {% if expenses %} {% for expense in expenses %}
+  <div
+    class="card fade-in"
+    style="padding: 16px; margin-bottom: 8px; animation-delay: 0.3s"
+  >
+    <div class="flex-between">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <div
+          style="
+            background: rgba(242, 125, 0, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+          "
+        >
+          {% if expense.category == 'Combustible' %}
+          <i
+            class="ph ph-gas-pump"
+            style="color: var(--accent-orange); font-size: 1.2rem"
+          ></i>
+          {% else %}
+          <i
+            class="ph ph-shopping-bag"
+            style="color: var(--accent-blue); font-size: 1.2rem"
+          ></i>
+          {% endif %}
+        </div>
+        <div>
+          <h4 style="font-size: 0.95rem; margin: 0">
+            {{ expense.description }}
+          </h4>
+          <span class="text-muted" style="font-size: 0.8rem"
+            >{{ expense.date }} • {{ expense.category }} 
+            {% if expense.category == 'Combustible' and expense.liters > 0 %}
+            • {{ expense.liters }} Gal
+            {% endif %}
+          </span>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <span style="font-weight: 600; color: #ff5252"
+          >-${{ "{:,.2f}".format(expense.amount) }}</span
+        >
+        <a
+          href="{{ url_for('edit_expense', expense_id=expense.id) }}"
+          style="
+            color: var(--accent-blue);
+            font-size: 1.1rem;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+          "
+        >
+          <i class="ph ph-pencil-simple"></i>
+        </a>
+        <form
+          action="{{ url_for('delete_expense', expense_id=expense.id) }}"
+          method="POST"
+          onsubmit="return confirm('¿Eliminar este gasto?');"
+        >
+          <button
+            type="submit"
+            style="
+              background: transparent;
+              border: none;
+              color: var(--text-secondary);
+              cursor: pointer;
+              font-size: 1.1rem;
+            "
+          >
+            <i class="ph ph-trash"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %} {% else %}
+  <p class="text-muted text-center mt-4">No hay gastos registrados aún.</p>
+  {% endif %}
+  <script>
+    function toggleLiters() {
+      const category = document.getElementById('expenseCategory').value;
+      const litersInput = document.getElementById('litersInput');
+      if (category === 'Combustible') {
+        litersInput.style.display = 'block';
+        litersInput.setAttribute('placeholder', 'Galones (Gal)');
+      } else {
+        litersInput.style.display = 'none';
+        litersInput.value = '';
+      }
+    }
+    document.addEventListener('DOMContentLoaded', toggleLiters);
+  </script>
+</section>
+{% endblock %}

@@ -1,0 +1,356 @@
+{% extends "base.html" %} {% block title %}Análisis Inteligente | MotoLog{%
+endblock %} {% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+  .analytics-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .kpi-card {
+    padding: 16px;
+    border-radius: 16px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+  }
+  .kpi-title {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    display: block;
+  }
+  .kpi-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+  }
+  .kpi-unit {
+    font-size: 0.7rem;
+    font-weight: 400;
+    opacity: 0.7;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 24px 0 12px 0;
+    font-size: 1rem;
+    font-weight: 600;
+  }
+  .alert-banner {
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+  }
+  .progress-container {
+    height: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 3px;
+    margin-top: 10px;
+    overflow: hidden;
+  }
+  .progress-bar {
+    height: 100%;
+    background: var(--accent-orange);
+    border-radius: 3px;
+  }
+</style>
+{% endblock %} {% block content %}
+<header class="fade-in" style="animation-delay: 0.1s">
+  <h1 class="page-title">Análisis Inteligente</h1>
+  <p class="text-muted">Estadísticas y proyección de rendimiento.</p>
+</header>
+
+<section class="fade-in" style="animation-delay: 0.2s">
+  {% if alerts %} {% for alert in alerts %}
+  <div class="alert-banner">
+    <i class="ph ph-warning-circle"></i>
+    <span>{{ alert.msg }}</span>
+  </div>
+  {% endfor %} {% endif %}
+
+  <!-- USO -->
+  <div class="section-header">
+    <i class="ph ph-gauge" style="color: var(--accent-blue)"></i>
+    Análisis de Uso
+  </div>
+  <div class="analytics-grid">
+    <div class="kpi-card">
+      <span class="kpi-title">KM Hoy</span>
+      <div class="kpi-value">
+        {{ km_today }} <span class="kpi-unit">km</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">KM Mes</span>
+      <div class="kpi-value">
+        {{ km_month }} <span class="kpi-unit">km</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Promedio Diario</span>
+      <div class="kpi-value">
+        {{ avg_km_day }} <span class="kpi-unit">km/día</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Estado Moto</span>
+      <div class="kpi-value">{{ status_pct }}%</div>
+      <div class="progress-container">
+        <div class="progress-bar" style="width: {{ status_pct }}%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COMBUSTIBLE & COSTOS -->
+  <div class="section-header">
+    <i class="ph ph-gas-pump" style="color: var(--accent-orange)"></i>
+    Rendimiento y Costos
+  </div>
+  <div class="analytics-grid">
+    <div class="kpi-card">
+      <span class="kpi-title">Rendimiento</span>
+      <div class="kpi-value">
+        {{ yield_kml }} <span class="kpi-unit">km/Gal</span>
+      </div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Costo por KM</span>
+      <div class="kpi-value">${{ cost_per_km }}</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Gasto Comb. Mes</span>
+      <div class="kpi-value">${{ "{:,.0f}".format(fuel_spend_month) }}</div>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Mantenimiento Mes</span>
+      <div class="kpi-value">${{ "{:,.0f}".format(maint_spend_month) }}</div>
+    </div>
+  </div>
+
+  <!-- FINANCIERO -->
+  <div class="section-header">
+    <i class="ph ph-coins" style="color: #4ade80"></i>
+    Balance Financiero (Mes)
+  </div>
+  <div
+    class="kpi-card"
+    style="margin-bottom: 20px; border-left: 4px solid #4ade80"
+  >
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+      "
+    >
+      <div>
+        <span class="kpi-title">Ganancia Neta</span>
+        <div class="kpi-value" style="font-size: 1.8rem; color: #4ade80">
+          ${{ "{:,.0f}".format(net_gain_month) }}
+        </div>
+      </div>
+      <div style="text-align: right">
+        <div class="text-muted" style="font-size: 0.75rem">
+          Ingresos: ${{ "{:,.0f}".format(income_month) }}
+        </div>
+        <div class="text-muted" style="font-size: 0.75rem">
+          Gastos: ${{ "{:,.0f}".format(expenses_month) }}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHART -->
+  <div class="card" style="padding: 16px; margin-bottom: 24px">
+    <span class="kpi-title" style="margin-bottom: 12px"
+      >Recorrido Mensual (Últimos 6 meses)</span
+    >
+    <canvas id="kmHistoryChart" style="width: 100%; height: 180px"></canvas>
+  </div>
+
+  <!-- SEGURIDAD Y ALERTAS -->
+  <div class="section-header">
+    <i class="ph ph-shield-check" style="color: #ef4444"></i>
+    Seguridad y Alertas de Velocidad
+  </div>
+  <div class="analytics-grid">
+    <div
+      class="kpi-card"
+      style="
+        border-left: 4px solid #ef4444;
+        background: rgba(239, 68, 68, 0.05);
+      "
+    >
+      <span class="kpi-title">Alertas Generadas</span>
+      <div class="kpi-value" style="color: #ef4444">
+        {{ total_speed_alerts }}
+      </div>
+      <span class="text-muted" style="font-size: 0.7rem">> 50 km/h</span>
+    </div>
+    <div class="kpi-card">
+      <span class="kpi-title">Récord Velocidad</span>
+      <div class="kpi-value" style="color: var(--accent-orange)">
+        {{ max_speed_record }} <span class="kpi-unit">km/h</span>
+      </div>
+    </div>
+  </div>
+
+  {% if recent_speed_alerts %}
+  <div class="card mb-4" style="padding: 16px">
+    <span class="kpi-title" style="margin-bottom: 12px"
+      >Últimas Infracciones Detectadas</span
+    >
+    <div style="display: flex; flex-direction: column; gap: 10px">
+      {% for alert in recent_speed_alerts %}
+      <div
+        style="
+          display: flex;
+          justify-content: space-between;
+          padding: 8px 0;
+          border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        "
+      >
+        <div>
+          <div style="font-size: 0.85rem; font-weight: 600">
+            {{ alert.title }}
+          </div>
+          <div class="text-muted" style="font-size: 0.75rem">
+            {{ alert.date }}
+          </div>
+        </div>
+        <div style="text-align: right">
+          <div style="color: #ef4444; font-weight: 700; font-size: 0.9rem">
+            {{ alert.max_speed_kmh }} km/h
+          </div>
+          <div style="font-size: 0.7rem; color: #ef4444; opacity: 0.8">
+            Exceso
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- PREDICCIONES IA -->
+  <div
+    class="card"
+    style="
+      padding: 16px;
+      background: rgba(59, 130, 246, 0.05);
+      border: 1px dashed rgba(59, 130, 246, 0.3);
+    "
+  >
+    <div
+      style="
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+        font-weight: 600;
+        color: var(--accent-blue);
+      "
+    >
+      <i class="ph ph-sparkle"></i> Predicciones Inteligentes
+    </div>
+    <ul
+      style="
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--text-secondary);
+      "
+    >
+      <li
+        style="
+          margin-bottom: 8px;
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+        "
+      >
+        <i
+          class="ph ph-check-circle"
+          style="color: var(--accent-blue); margin-top: 3px"
+        ></i>
+        <span
+          >Próximo cambio de aceite estimado en
+          <strong>{{ km_to_next_oil }} km</strong>.</span
+        >
+      </li>
+      <li
+        style="
+          margin-bottom: 8px;
+          display: flex;
+          align-items: flex-start;
+          gap: 8px;
+        "
+      >
+        <i
+          class="ph ph-check-circle"
+          style="color: var(--accent-blue); margin-top: 3px"
+        ></i>
+        <span
+          >Proyección de gasto combustible mes:
+          <strong>${{ "{:,.0f}".format(fuel_spend_month * 1.1) }}</strong
+          >.</span
+        >
+      </li>
+      <li style="display: flex; align-items: flex-start; gap: 8px">
+        <i
+          class="ph ph-check-circle"
+          style="color: var(--accent-blue); margin-top: 3px"
+        ></i>
+        <span
+          >Conducción Segura: Se han detectado {{ total_speed_alerts }} excesos
+          de velocidad en total.</span
+        >
+      </li>
+    </ul>
+  </div>
+</section>
+
+<div style="height: 80px"></div>
+<!-- Spacer for bottom nav -->
+
+<script>
+  (function() {
+    const ctx = document.getElementById('kmHistoryChart');
+    if (!ctx) return;
+
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: {{ chart_km_labels | safe }},
+        datasets: [{
+          label: 'Kilómetros',
+          data: {{ chart_km_data | safe }},
+          borderColor: '#3b82f6',
+          backgroundColor: 'rgba(59, 130, 246, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 4,
+          pointBackgroundColor: '#3b82f6'
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: '#888', font: { size: 10 } } },
+          y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#888', font: { size: 10 } }, beginAtZero: true }
+        }
+      }
+    });
+  })();
+</script>
+{% endblock %}

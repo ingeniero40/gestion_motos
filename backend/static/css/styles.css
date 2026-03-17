@@ -1,0 +1,301 @@
+/* General Reset & Typography */
+:root {
+  --bg-color: #09090b; /* Zinc 950 */
+  --bg-card: #18181b; /* Zinc 900 */
+  --bg-card-hover: #27272a; /* Zinc 800 */
+  --text-primary: #fafafa;
+  --text-secondary: #a1a1aa;
+  --accent-blue: #3b82f6; /* Sport Blue */
+  --accent-blue-hover: #2563eb;
+  --accent-orange: #ef4444; /* Racing Red */
+  --accent-orange-hover: #dc2626;
+  --border-color: #3f3f46;
+  --nav-bg: rgba(9, 9, 11, 0.85);
+
+  --transition-speed: 0.3s;
+  --border-radius: 12px;
+}
+
+/* Light Theme Overrides (Clean Professional) */
+:root.light-theme {
+  --bg-color: #f4f4f5; /* Zinc 100 */
+  --bg-card: #ffffff;
+  --bg-card-hover: #e4e4e7; /* Zinc 200 */
+  --text-primary: #09090b;
+  --text-secondary: #52525b;
+  --border-color: #d4d4d8;
+  --nav-bg: rgba(244, 244, 245, 0.9);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: "Roboto", sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Layout */
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 20px;
+  width: 100%;
+  padding-bottom: 90px; /* Space for bottom nav */
+}
+
+/* Typography Elements */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Rajdhani", sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  margin-bottom: 24px;
+}
+
+.text-muted {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+/* Cards (Glassmorphism inspired dark cards) */
+.card {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  padding: 20px;
+  margin-bottom: 16px;
+  transition:
+    transform var(--transition-speed),
+    background-color var(--transition-speed),
+    box-shadow var(--transition-speed);
+  position: relative;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  background-color: var(--bg-card-hover);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.card-title {
+  font-size: 1.1rem;
+  font-weight: 500;
+}
+
+.card-value {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+  line-height: 1;
+  margin: 8px 0;
+}
+
+.card-value.warning {
+  color: var(--accent-orange);
+}
+
+/* Buttons and FAB */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  font-family: "Roboto", sans-serif;
+  cursor: pointer;
+  transition: all var(--transition-speed);
+  border: none;
+  outline: none;
+}
+
+.btn-primary {
+  background-color: var(--accent-blue);
+  color: #fff;
+  box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);
+}
+
+.btn-primary:hover {
+  background-color: var(--accent-blue-hover);
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: transparent;
+  color: var(--accent-orange);
+  border: 1px solid var(--accent-orange);
+}
+
+.btn-secondary:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: var(--nav-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-around;
+  padding: 12px 0;
+  z-index: 99;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: var(--text-secondary);
+  text-decoration: none;
+  font-size: 0.75rem;
+  flex: 1;
+  transition: color var(--transition-speed);
+}
+
+.nav-item i {
+  font-size: 1.5rem;
+  margin-bottom: 4px;
+  transition: transform var(--transition-speed);
+}
+
+.nav-item:hover,
+.nav-item.active {
+  color: var(--accent-blue);
+}
+
+.nav-item:hover i,
+.nav-item.active i {
+  transform: translateY(-2px);
+}
+
+/* Utilities */
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mt-4 {
+  margin-top: 16px;
+}
+.mb-4 {
+  margin-bottom: 16px;
+}
+.mb-2 {
+  margin-bottom: 8px;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-color);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-secondary);
+}
+
+/* --- Magical Toast & Alerts --- */
+.magical-toast {
+  position: fixed;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%) translateY(-30px);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 12px 20px;
+  border-radius: 8px; /* Standard box shape */
+  font-family: "Roboto", sans-serif;
+  font-size: 0.9rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 9999;
+}
+
+.magical-toast.show {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateX(-50%) translateY(0);
+}
+
+.toast-indicator {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-blue);
+  box-shadow: 0 0 10px var(--accent-blue);
+}
+
+.toast-warning .toast-indicator {
+  background: var(--accent-orange);
+  box-shadow: 0 0 10px var(--accent-orange);
+}
+
+.toast-success .toast-indicator {
+  background: #34d399;
+  box-shadow: 0 0 10px #34d399;
+}

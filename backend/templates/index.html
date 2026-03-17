@@ -1,0 +1,252 @@
+{% extends "base.html" %} {% block title %}Dashboard | MotoLog{% endblock %} {%
+block content %}
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+<header class="fade-in" style="animation-delay: 0.1s">
+  <h1 class="page-title">Dashboard</h1>
+  {% if moto %}
+  <p class="text-muted mb-4">
+    {{ moto.make }} {{ moto.model }} &bull; {{ moto.year }}
+  </p>
+  {% else %}
+  <p class="text-muted mb-4">No hay motocicleta registrada.</p>
+  {% endif %}
+</header>
+
+<section class="fade-in" style="animation-delay: 0.15s">
+  <!-- KPI CARDS -->
+  <div
+    style="
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    "
+  >
+    <!-- Mileage -->
+    <div class="card fade-in" style="padding: 16px; animation-delay: 0.2s">
+      <div class="flex-between mb-2">
+        <i
+          class="ph ph-gauge"
+          style="color: var(--accent-blue); font-size: 1.5rem"
+        ></i>
+        <span class="text-muted" style="font-size: 0.75rem">KM Totales</span>
+      </div>
+      <div style="font-size: 1.4rem; font-weight: 700">
+        {{ "{:,}".format(total_km_validated) if moto else "0" }}
+      </div>
+    </div>
+
+    <!-- Oil Life -->
+    <div class="card fade-in" style="padding: 16px; animation-delay: 0.25s">
+      <div class="flex-between mb-2">
+        <i
+          class="ph ph-drop"
+          style="color: var(--accent-orange); font-size: 1.5rem"
+        ></i>
+        <span class="text-muted" style="font-size: 0.75rem">Vida Aceite</span>
+      </div>
+      <div style="font-size: 1.4rem; font-weight: 700">{{ oil_life }}%</div>
+      <div
+        style="
+          width: 100%;
+          height: 4px;
+          background: rgba(255, 255, 255, 0.1);
+          border-radius: 2px;
+          margin-top: 8px;
+        "
+      >
+        <div
+          style="width: {{ oil_life }}%; height: 100%; background: var(--accent-orange); border-radius: 2px;"
+        ></div>
+      </div>
+    </div>
+
+    <!-- Fuel Efficiency -->
+    <div class="card fade-in" style="padding: 16px; animation-delay: 0.3s; border: 1px solid rgba(59, 130, 246, 0.2);">
+      <div class="flex-between mb-2">
+        <i
+          class="ph ph-gas-pump"
+          style="color: var(--accent-blue); font-size: 1.5rem"
+        ></i>
+        <span class="text-muted" style="font-size: 0.75rem">Rendimiento</span>
+      </div>
+      <div style="font-size: 1.4rem; font-weight: 700; color: var(--accent-blue);">
+        {{ fuel_efficiency }} <span style="font-size: 0.7rem; font-weight: 400; opacity: 0.8">km/Gal</span>
+      </div>
+      <div class="text-muted" style="font-size: 0.65rem; margin-top: 4px;">
+        Total: {{ total_fuel_liters }} Gal
+      </div>
+    </div>
+
+    <!-- Max Speed Record -->
+    <div class="card fade-in" style="padding: 16px; animation-delay: 0.35s">
+      <div class="flex-between mb-2">
+        <i
+          class="ph ph-lightning"
+          style="color: var(--accent-orange); font-size: 1.2rem"
+        ></i>
+        <span class="text-muted" style="font-size: 0.75rem">Máx Vel.</span>
+      </div>
+      <div style="font-size: 1.3rem; font-weight: 700;">
+        {{ max_speed_record }} <span style="font-size: 0.7rem; font-weight: 400">km/h</span>
+      </div>
+    </div>
+
+    <!-- Total Services -->
+    <div class="card fade-in" style="padding: 16px; animation-delay: 0.4s">
+      <div class="flex-between mb-2">
+        <i
+          class="ph ph-wrench"
+          style="color: var(--text-secondary); font-size: 1.2rem"
+        ></i>
+        <span class="text-muted" style="font-size: 0.75rem">Servicios</span>
+      </div>
+      <div style="font-size: 1.3rem; font-weight: 700">
+        {{ total_services }}
+      </div>
+    </div>
+  </div>
+
+  <!-- CHART: Gastos por Mes -->
+  <div
+    class="card fade-in"
+    style="padding: 16px; animation-delay: 0.2s; margin-bottom: 16px"
+  >
+    <div class="flex-between mb-2" style="align-items: center">
+      <h3 style="font-size: 1rem; font-weight: 600; margin: 0">
+        Gastos por Mes
+      </h3>
+      <form
+        method="GET"
+        action="/"
+        style="display: flex; gap: 6px; align-items: center"
+      >
+        <select
+          name="year"
+          onchange="this.form.submit()"
+          style="
+            padding: 5px 8px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            font-size: 0.8rem;
+          "
+        >
+          {% for yr in years_available %}
+          <option value="{{ yr }}" {{ 'selected' if yr|string == selected_year|string else '' }}>{{ yr }}</option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+    <canvas id="expensesChart" style="width: 100%; max-height: 200px"></canvas>
+  </div>
+
+  <!-- ACTIVIDAD RECIENTE -->
+  <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 10px">
+    Actividad Reciente
+  </h3>
+
+  {% if recent_activity %} {% for item in recent_activity %}
+  <div class="card fade-in" style="padding: 14px 16px; margin-bottom: 8px">
+    <div class="flex-between">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <div
+          style="
+            background: rgba(255, 255, 255, 0.05);
+            padding: 9px;
+            border-radius: 10px;
+            flex-shrink: 0;
+          "
+        >
+          <i
+            class="ph {{ item.icon }}"
+            style="color: {{ item.color }}; font-size: 1.1rem;"
+          ></i>
+        </div>
+        <div>
+          <h4 style="font-size: 0.9rem; margin: 0; font-weight: 500">
+            {{ item.title }}
+          </h4>
+          <span class="text-muted" style="font-size: 0.78rem"
+            >{{ item.subtitle }}</span
+          >
+        </div>
+      </div>
+      <i
+        class="ph ph-caret-right"
+        style="color: var(--text-secondary); font-size: 0.9rem"
+      ></i>
+    </div>
+  </div>
+  {% endfor %} {% else %}
+  <div class="card" style="padding: 24px; text-align: center">
+    <i
+      class="ph ph-clock-clockwise"
+      style="font-size: 2rem; color: var(--text-secondary)"
+    ></i>
+    <p class="text-muted mt-2">Aun no hay actividad registrada.</p>
+    <div style="display: flex; gap: 8px; margin-top: 12px">
+      <a
+        href="{{ url_for('expenses_view') }}"
+        class="btn btn-primary"
+        style="flex: 1; text-align: center; padding: 8px; font-size: 0.85rem"
+        >Registrar Gasto</a
+      >
+      <a
+        href="{{ url_for('services_view') }}"
+        class="btn btn-secondary"
+        style="flex: 1; text-align: center; padding: 8px; font-size: 0.85rem"
+        >Anadir Servicio</a
+      >
+    </div>
+  </div>
+  {% endif %}
+</section>
+
+<script>
+  (function() {
+    var labels = {{ chart_labels | safe }};
+    var data   = {{ chart_data | safe }};
+    var ctx = document.getElementById("expensesChart");
+    if (!ctx) return;
+    var maxVal = Math.max.apply(null, data);
+    new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: labels,
+        datasets: [{
+          label: "Gastos ($)",
+          data: data,
+          backgroundColor: data.map(function(v) {
+            return (v === maxVal && v > 0) ? "rgba(242,125,0,0.85)" : "rgba(242,125,0,0.35)";
+          }),
+          borderColor: "rgba(242,125,0,0.9)",
+          borderWidth: 1,
+          borderRadius: 6,
+          borderSkipped: false
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: function(c) { return " $" + c.parsed.y.toFixed(2); } } }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: "#888", font: { size: 11 } } },
+          y: {
+            grid: { color: "rgba(255,255,255,0.05)" },
+            ticks: { color: "#888", font: { size: 11 }, callback: function(v) { return "$" + v; } },
+            beginAtZero: true
+          }
+        }
+      }
+    });
+  })();
+</script>
+
+{% endblock %}

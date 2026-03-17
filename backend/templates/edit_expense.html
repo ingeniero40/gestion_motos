@@ -1,0 +1,183 @@
+{% extends "base.html" %} {% block title %}Editar Gasto | MotoLog{% endblock %}
+{% block content %}
+<header class="fade-in" style="animation-delay: 0.1s">
+  <a
+    href="{{ url_for('expenses_view') }}"
+    style="
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+    "
+  >
+    <i class="ph ph-arrow-left"></i> Volver a Gastos
+  </a>
+  <h1 class="page-title">Editar Gasto</h1>
+</header>
+
+<section class="fade-in" style="animation-delay: 0.2s">
+  <div class="card" style="padding: 20px">
+    <form
+      action="{{ url_for('edit_expense', expense_id=expense.id) }}"
+      method="POST"
+      style="display: flex; flex-direction: column; gap: 14px"
+    >
+      <div>
+        <label
+          style="
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: block;
+          "
+          >Descripción</label
+        >
+        <input
+          type="text"
+          name="description"
+          value="{{ expense.description }}"
+          required
+          style="
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+          "
+        />
+      </div>
+
+      <div style="display: flex; gap: 8px">
+        <div style="flex: 1">
+          <label
+            style="
+              font-size: 0.85rem;
+              color: var(--text-secondary);
+              margin-bottom: 6px;
+              display: block;
+            "
+            >Monto ($)</label
+          >
+          <input
+            type="number"
+            step="0.01"
+            name="amount"
+            value="{{ expense.amount }}"
+            required
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px;
+              border-radius: 8px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-primary);
+              color: var(--text-primary);
+            "
+          />
+        </div>
+        <div style="flex: 1">
+          <label
+            style="
+              font-size: 0.85rem;
+              color: var(--text-secondary);
+              margin-bottom: 6px;
+              display: block;
+            "
+            >Fecha</label
+          >
+          <input
+            type="date"
+            name="date"
+            value="{{ expense.date }}"
+            required
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px;
+              border-radius: 8px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-primary);
+              color: var(--text-primary);
+            "
+          />
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px">
+        <div style="flex: 2">
+          <label style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px; display: block;">Categoría</label>
+          <select
+            id="expenseCategoryEdit"
+            name="category"
+            onchange="toggleLitersEdit()"
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px;
+              border-radius: 8px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-primary);
+              color: var(--text-primary);
+            "
+          >
+            <option value="Combustible" {% if expense.category == "Combustible" %}selected{% endif %}>Combustible</option>
+            <option value="Accesorios" {% if expense.category == "Accesorios" %}selected{% endif %}>Accesorios</option>
+            <option value="Peajes" {% if expense.category == "Peajes" %}selected{% endif %}>Peajes</option>
+            <option value="Otros" {% if expense.category == "Otros" %}selected{% endif %}>Otros</option>
+          </select>
+        </div>
+        <div id="litersContainer" style="flex: 1; display: none;">
+          <label style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 6px; display: block;">Galones (Gal)</label>
+          <input
+            type="number"
+            step="0.01"
+            name="liters"
+            value="{{ expense.liters }}"
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px;
+              border-radius: 8px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-primary);
+              color: var(--text-primary);
+            "
+          />
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; margin-top: 8px">
+        <a
+          href="{{ url_for('expenses_view') }}"
+          class="btn btn-secondary"
+          style="flex: 1; text-align: center; padding: 12px"
+          >Cancelar</a
+        >
+        <button
+          type="submit"
+          class="btn btn-primary"
+          style="flex: 2; padding: 12px"
+        >
+          Guardar Cambios
+        </button>
+      </div>
+    </form>
+  </div>
+  <script>
+    function toggleLitersEdit() {
+      const category = document.getElementById('expenseCategoryEdit').value;
+      const litersContainer = document.getElementById('litersContainer');
+      if (category === 'Combustible') {
+        litersContainer.style.display = 'block';
+      } else {
+        litersContainer.style.display = 'none';
+      }
+    }
+    document.addEventListener('DOMContentLoaded', toggleLitersEdit);
+  </script>
+</section>
+{% endblock %}

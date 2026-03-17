@@ -1,0 +1,1 @@
+# Módulo Trips (Bounded Context)

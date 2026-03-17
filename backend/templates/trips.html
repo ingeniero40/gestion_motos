@@ -1,0 +1,659 @@
+{% extends "base.html" %} {% block title %}Viajes | MotoLog{% endblock %} {%
+block content %}
+<header class="fade-in" style="animation-delay: 0.1s">
+  <h1 class="page-title">Mis Viajes</h1>
+  <p class="text-muted mb-4">Registra tus rutas y récords de velocidad.</p>
+</header>
+
+{% if speed_alert %}
+<div
+  class="card fade-in"
+  style="
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    padding: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  "
+>
+  <i class="ph ph-warning-diamond" style="font-size: 1.5rem"></i>
+  <div>
+    <strong style="display: block">¡Alerta de Seguridad!</strong>
+    <span style="font-size: 0.85rem"
+      >La velocidad registrada ({{ speed_value }} km/h) excede el límite de
+      seguridad de 50 km/h.</span
+    >
+  </div>
+</div>
+{% endif %}
+
+<style>
+  .trips-container {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  @media (min-width: 992px) {
+    .trips-container {
+      grid-template-columns: 350px 1fr;
+    }
+  }
+  .sticky-form {
+    position: sticky;
+    top: 20px;
+  }
+  .table-responsive {
+    width: 100%;
+    overflow-x: auto;
+    background: var(--bg-card);
+    border-radius: 12px;
+    border: 1px solid var(--border-color);
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+  }
+  th {
+    text-align: left;
+    padding: 14px 16px;
+    background: rgba(255, 255, 255, 0.03);
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border-color);
+  }
+  td {
+    padding: 14px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    vertical-align: middle;
+  }
+  tr:last-child td {
+    border-bottom: none;
+  }
+  tr:hover td {
+    background: rgba(255, 255, 255, 0.01);
+  }
+  .btn-delete {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .btn-delete:hover {
+    color: #ff4d4d;
+    background: rgba(255, 77, 77, 0.1);
+  }
+  .btn-edit {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+  .btn-edit:hover {
+    color: var(--accent-blue);
+    background: rgba(59, 130, 246, 0.1);
+  }
+  .modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    display: none;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+  }
+  .modal-content {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 500px;
+    padding: 24px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+    animation: modalSlideUp 0.3s ease-out;
+  }
+  @keyframes modalSlideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+</style>
+
+<div class="trips-container">
+  <div class="sticky-form">
+    <div
+      class="card fade-in mb-4"
+      style="
+        padding: 24px;
+        animation-delay: 0.3s;
+        border: 1px dashed var(--border-color);
+      "
+    >
+      <h4
+        style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px"
+      >
+        <i class="ph ph-plus-circle" style="color: var(--accent-blue)"></i>
+        Registrar Nuevo Viaje
+      </h4>
+      <form
+        action="{{ url_for('trips_view') }}"
+        method="POST"
+        style="display: flex; flex-direction: column; gap: 16px"
+      >
+        <div class="form-group">
+          <label
+            style="
+              font-size: 0.8rem;
+              color: var(--text-secondary);
+              margin-bottom: 6px;
+              display: block;
+            "
+            >Título del Viaje</label
+          >
+          {% set pre_title = last_trip.title if last_trip else '' %}
+          <input
+            type="text"
+            name="title"
+            value="{{ pre_title }}"
+            placeholder="Ej. Ruta por el Eje Cafetero"
+            required
+            class="form-control"
+            style="
+              width: 100%;
+              padding: 12px;
+              border-radius: 8px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-primary);
+              color: var(--text-primary);
+            "
+          />
+        </div>
+        <div style="display: flex; gap: 12px">
+          <div style="flex: 1">
+            <label
+              style="
+                font-size: 0.8rem;
+                color: var(--text-secondary);
+                margin-bottom: 6px;
+                display: block;
+              "
+              >Fecha</label
+            >
+            {% set pre_date = last_trip.date[:10] if (last_trip and
+            last_trip.date) else '' %}
+            <input
+              type="date"
+              name="date"
+              value="{{ pre_date }}"
+              required
+              class="form-control"
+              style="
+                width: 100%;
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid var(--border-color);
+                background: var(--bg-primary);
+                color: var(--text-primary);
+              "
+            />
+          </div>
+          <div style="flex: 1">
+            <label
+              style="
+                font-size: 0.8rem;
+                color: var(--text-secondary);
+                margin-bottom: 6px;
+                display: block;
+              "
+              >Distancia (km)</label
+            >
+            {% set pre_dist = last_trip.distance_km if last_trip else '' %}
+            <input
+              type="number"
+              step="0.1"
+              name="distance_km"
+              value="{{ pre_dist }}"
+              placeholder="0.0"
+              required
+              class="form-control"
+              style="
+                width: 100%;
+                padding: 12px;
+                border-radius: 8px;
+                border: 1px solid var(--border-color);
+                background: var(--bg-primary);
+                color: var(--text-primary);
+              "
+            />
+          </div>
+        </div>
+        <div class="form-group">
+          <label
+            style="
+              font-size: 0.8rem;
+              color: var(--text-secondary);
+              margin-bottom: 6px;
+              display: block;
+            "
+            >Velocidad Máxima (km/h)</label
+          >
+          <div style="position: relative">
+            <i
+              class="ph ph-gauge"
+              style="
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: var(--accent-orange);
+                font-size: 1.1rem;
+              "
+            ></i>
+            {% set pre_speed = last_trip.max_speed_kmh if last_trip else '' %}
+            <input
+              type="number"
+              step="0.1"
+              name="max_speed_kmh"
+              value="{{ pre_speed }}"
+              placeholder="0.0"
+              required
+              class="form-control"
+              style="
+                width: 100%;
+                padding: 12px 12px 12px 40px;
+                border-radius: 8px;
+                border: 1px solid var(--border-color);
+                background: var(--bg-primary);
+                color: var(--text-primary);
+              "
+            />
+          </div>
+        </div>
+        <div class="form-group">
+          <label
+            style="
+              font-size: 0.8rem;
+              color: var(--text-secondary);
+              margin-bottom: 6px;
+              display: block;
+            "
+            >Descripción</label
+          >
+          {% set pre_desc = last_trip.description if last_trip else '' %}
+          <textarea
+            name="description"
+            placeholder="Detalles sobre el clima... "
+            rows="3"
+            class="form-control"
+            style="
+              width: 100%;
+              padding: 12px;
+              border-radius: 8px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-primary);
+              color: var(--text-primary);
+              resize: none;
+            "
+          >
+{{ pre_desc }}</textarea
+          >
+        </div>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          style="padding: 14px; font-weight: 600; letter-spacing: 0.5px"
+        >
+          <i class="ph ph-floppy-disk"></i> Guardar Ruta
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="fade-in" style="animation-delay: 0.4s">
+    <div class="flex-between mb-4" style="align-items: center">
+      <h3
+        style="
+          font-size: 1.1rem;
+          font-weight: 600;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        "
+      >
+        <i class="ph ph-clock-counter-clockwise"></i> Historial de Rutas
+      </h3>
+      <form
+        method="GET"
+        action="{{ url_for('trips_view') }}"
+        style="display: flex; gap: 8px"
+      >
+        <div style="position: relative">
+          <i
+            class="ph ph-magnifying-glass"
+            style="
+              position: absolute;
+              left: 10px;
+              top: 50%;
+              transform: translateY(-50%);
+              color: var(--text-secondary);
+              font-size: 0.8rem;
+            "
+          ></i>
+          <input
+            type="text"
+            name="search"
+            placeholder="Buscar..."
+            value="{{ search_query }}"
+            style="
+              padding: 6px 10px 6px 30px;
+              border-radius: 6px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-card);
+              color: var(--text-primary);
+              font-size: 0.8rem;
+              width: 120px;
+            "
+          />
+        </div>
+        <select
+          name="year"
+          onchange="this.form.submit()"
+          style="
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 0.8rem;
+          "
+        >
+          <option value="">Años</option>
+          {% for yr in trips_years %} {% set yr_active = (yr == selected_year)
+          %}
+          <option value="{{ yr }}" {% if yr_active %}selected{% endif %}>
+            {{ yr }}
+          </option>
+          {% endfor %}
+        </select>
+      </form>
+    </div>
+
+    {% if trips %}
+    <div class="table-responsive">
+      <table>
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Viaje</th>
+            <th style="text-align: center">Distancia</th>
+            <th style="text-align: center">Máx. Vel</th>
+            <th style="text-align: center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for trip in trips %}
+          <tr>
+            <td style="white-space: nowrap">
+              <span class="text-muted" style="font-size: 0.85rem"
+                >{{ trip.date[:10] }}</span
+              >
+            </td>
+            <td>
+              <div style="font-weight: 600">{{ trip.title }}</div>
+            </td>
+            <td style="text-align: center">
+              <div
+                class="badge"
+                style="
+                  background: rgba(255, 255, 255, 0.05);
+                  padding: 4px 8px;
+                  border-radius: 6px;
+                  font-size: 0.85rem;
+                  display: inline-block;
+                "
+              >
+                {{ trip.distance_km }} km
+              </div>
+            </td>
+            <td style="text-align: center">
+              <div
+                style="
+                  color: var(--accent-orange);
+                  font-weight: 700;
+                  font-size: 0.9rem;
+                "
+              >
+                {{ trip.max_speed_kmh }}
+                <span style="font-size: 0.7rem; font-weight: 400">km/h</span>
+              </div>
+            </td>
+            <td style="text-align: center">
+              <div style="display: flex; justify-content: center; gap: 4px">
+                <button
+                  class="btn-edit"
+                  title="Editar"
+                  onclick='openEditModal({{ trip.id | tojson }}, {{ trip.title | tojson }}, {{ (trip.date or "")[:10] | tojson }}, {{ trip.distance_km | tojson }}, {{ trip.max_speed_kmh | tojson }}, {{ (trip.description or "") | tojson }})'
+                >
+                  <i class="ph ph-pencil-simple"></i>
+                </button>
+                <form
+                  action="{{ url_for('delete_trip', trip_id=trip.id) }}"
+                  method="POST"
+                  onsubmit="return confirm('¿Eliminar este registro?');"
+                >
+                  <button type="submit" class="btn-delete">
+                    <i class="ph ph-trash"></i>
+                  </button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    {% if total_pages > 1 %}
+    <div
+      style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 24px;
+        padding-bottom: 60px;
+      "
+    >
+      {% if has_prev %}<a
+        href="{{ url_for('trips_view', page=page-1, search=search_query, year=selected_year, sort=sort_order) }}"
+        class="btn btn-secondary"
+        style="padding: 8px 16px; font-size: 0.85rem"
+        ><i class="ph ph-caret-left"></i> Anterior</a
+      >{% else %}
+      <div></div>
+      {% endif %}
+      <span class="text-muted" style="font-size: 0.85rem; font-weight: 500"
+        >{{ page }} / {{ total_pages }}</span
+      >
+      {% if has_next %}<a
+        href="{{ url_for('trips_view', page=page+1, search=search_query, year=selected_year, sort=sort_order) }}"
+        class="btn btn-secondary"
+        style="padding: 8px 16px; font-size: 0.85rem"
+        >Siguiente <i class="ph ph-caret-right"></i></a
+      >{% else %}
+      <div></div>
+      {% endif %}
+    </div>
+    {% endif %} {% else %}
+    <div
+      class="card"
+      style="
+        padding: 40px 24px;
+        text-align: center;
+        border: 1px dashed var(--border-color);
+        opacity: 0.7;
+      "
+    >
+      <i
+        class="ph ph-map-trifold"
+        style="
+          font-size: 3rem;
+          color: var(--text-secondary);
+          margin-bottom: 16px;
+        "
+      ></i>
+      <p class="text-muted" style="font-size: 1rem">No se encontraron rutas.</p>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div id="editModal" class="modal-overlay">
+  <div class="modal-content card">
+    <h4
+      style="margin: 0 0 20px 0; display: flex; align-items: center; gap: 8px"
+    >
+      <i class="ph ph-pencil-simple" style="color: var(--accent-blue)"></i>
+      Editar Viaje
+    </h4>
+    <form id="editForm" method="POST">
+      <input
+        type="text"
+        id="editTitle"
+        name="title"
+        required
+        class="form-control mb-3"
+        placeholder="Título"
+        style="
+          width: 100%;
+          padding: 12px;
+          border-radius: 8px;
+          border: 1px solid var(--border-color);
+          background: var(--bg-primary);
+          color: var(--text-primary);
+        "
+      />
+      <div style="display: flex; gap: 12px" class="mb-3">
+        <input
+          type="date"
+          id="editDate"
+          name="date"
+          required
+          class="form-control"
+          style="
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+          "
+        />
+        <input
+          type="number"
+          step="0.1"
+          id="editDistance"
+          name="distance_km"
+          required
+          class="form-control"
+          placeholder="KM"
+          style="
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+          "
+        />
+      </div>
+      <input
+        type="number"
+        step="0.1"
+        id="editMaxSpeed"
+        name="max_speed_kmh"
+        required
+        class="form-control mb-3"
+        placeholder="Vel Máx"
+        style="
+          width: 100%;
+          padding: 12px;
+          border-radius: 8px;
+          border: 1px solid var(--border-color);
+          background: var(--bg-primary);
+          color: var(--text-primary);
+        "
+      />
+      <textarea
+        id="editDescription"
+        name="description"
+        rows="3"
+        class="form-control mb-4"
+        placeholder="Comentarios"
+        style="
+          width: 100%;
+          padding: 12px;
+          border-radius: 8px;
+          border: 1px solid var(--border-color);
+          background: var(--bg-primary);
+          color: var(--text-primary);
+          resize: none;
+        "
+      ></textarea>
+      <div style="display: flex; gap: 12px; justify-content: flex-end">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          onclick="closeEditModal()"
+        >
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary">Guardar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function openEditModal(id, title, date, distance, speed, description) {
+    const modal = document.getElementById("editModal");
+    const form = document.getElementById("editForm");
+    form.action = `/trips/update/${id}`;
+    document.getElementById("editTitle").value = title || "";
+    document.getElementById("editDate").value = date || "";
+    document.getElementById("editDistance").value = distance || 0;
+    document.getElementById("editMaxSpeed").value = speed || 0;
+    document.getElementById("editDescription").value = description || "";
+    modal.style.display = "flex";
+  }
+  function closeEditModal() {
+    document.getElementById("editModal").style.display = "none";
+  }
+  window.onclick = function (event) {
+    if (event.target == document.getElementById("editModal")) closeEditModal();
+  };
+</script>
+{% endblock %}

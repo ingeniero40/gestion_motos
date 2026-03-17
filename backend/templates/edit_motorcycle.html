@@ -1,0 +1,209 @@
+{% extends "base.html" %} {% block title %}Editar Motocicleta | MotoLog{%
+endblock %} {% block content %}
+<header class="fade-in" style="animation-delay: 0.1s">
+  <a
+    href="{{ url_for('profile_view') }}"
+    style="
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+    "
+  >
+    <i class="ph ph-arrow-left"></i> Volver al Perfil
+  </a>
+  <h1 class="page-title">Editar Motocicleta</h1>
+</header>
+
+<section class="fade-in" style="animation-delay: 0.2s">
+  <div class="card" style="padding: 20px">
+    <form
+      action="{{ url_for('edit_motorcycle') }}"
+      method="POST"
+      style="display: flex; flex-direction: column; gap: 14px"
+    >
+      <div style="display: flex; gap: 8px">
+        <div style="flex: 1">
+          <label
+            style="
+              font-size: 0.85rem;
+              color: var(--text-secondary);
+              margin-bottom: 6px;
+              display: block;
+            "
+            >Marca</label
+          >
+          <input
+            type="text"
+            name="make"
+            value="{{ moto.make }}"
+            required
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px;
+              border-radius: 8px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-primary);
+              color: var(--text-primary);
+            "
+          />
+        </div>
+        <div style="flex: 1">
+          <label
+            style="
+              font-size: 0.85rem;
+              color: var(--text-secondary);
+              margin-bottom: 6px;
+              display: block;
+            "
+            >Modelo</label
+          >
+          <input
+            type="text"
+            name="model"
+            value="{{ moto.model }}"
+            required
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px;
+              border-radius: 8px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-primary);
+              color: var(--text-primary);
+            "
+          />
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px">
+        <div style="flex: 1">
+          <label
+            style="
+              font-size: 0.85rem;
+              color: var(--text-secondary);
+              margin-bottom: 6px;
+              display: block;
+            "
+            >Año</label
+          >
+          <input
+            type="number"
+            name="year"
+            value="{{ moto.year }}"
+            required
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px;
+              border-radius: 8px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-primary);
+              color: var(--text-primary);
+            "
+          />
+        </div>
+        <div style="flex: 1">
+          <label
+            style="
+              font-size: 0.85rem;
+              color: var(--text-secondary);
+              margin-bottom: 6px;
+              display: block;
+            "
+            >Kilometraje Actual</label
+          >
+          <input
+            type="number"
+            name="current_mileage"
+            value="{{ moto.current_mileage }}"
+            required
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px;
+              border-radius: 8px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-primary);
+              color: var(--text-primary);
+            "
+          />
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px">
+        <div style="flex: 2">
+          <label
+            style="
+              font-size: 0.85rem;
+              color: var(--text-secondary);
+              margin-bottom: 6px;
+              display: block;
+            "
+            >VIN</label
+          >
+          <input
+            type="text"
+            name="vin"
+            value="{{ moto.vin }}"
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px;
+              border-radius: 8px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-primary);
+              color: var(--text-primary);
+            "
+          />
+        </div>
+        <div style="flex: 1">
+          <label
+            style="
+              font-size: 0.85rem;
+              color: var(--text-secondary);
+              margin-bottom: 6px;
+              display: block;
+            "
+            >Tope Aceite (km)</label
+          >
+          <input
+            type="number"
+            name="oil_change_interval"
+            value="{{ moto.oil_change_interval }}"
+            required
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px;
+              border-radius: 8px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-primary);
+              color: var(--text-primary);
+            "
+          />
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; margin-top: 8px">
+        <a
+          href="{{ url_for('profile_view') }}"
+          class="btn btn-secondary"
+          style="flex: 1; text-align: center; padding: 12px"
+          >Cancelar</a
+        >
+        <button
+          type="submit"
+          class="btn btn-primary"
+          style="flex: 2; padding: 12px"
+        >
+          Guardar Cambios
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

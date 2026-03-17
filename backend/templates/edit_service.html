@@ -1,0 +1,181 @@
+{% extends "base.html" %} {% block title %}Editar Servicio | MotoLog{% endblock
+%} {% block content %}
+<header class="fade-in" style="animation-delay: 0.1s">
+  <a
+    href="{{ url_for('services_view') }}"
+    style="
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 12px;
+    "
+  >
+    <i class="ph ph-arrow-left"></i> Volver a Servicios
+  </a>
+  <h1 class="page-title">Editar Servicio</h1>
+</header>
+
+<section class="fade-in" style="animation-delay: 0.2s">
+  <div class="card" style="padding: 20px">
+    <form
+      action="{{ url_for('edit_service', service_id=service.id) }}"
+      method="POST"
+      style="display: flex; flex-direction: column; gap: 14px"
+    >
+      <div>
+        <label
+          style="
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: block;
+          "
+          >Tipo de Servicio</label
+        >
+        <input
+          type="text"
+          name="service_type"
+          value="{{ service.service_type }}"
+          required
+          style="
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+          "
+        />
+      </div>
+
+      <div style="display: flex; gap: 8px">
+        <div style="flex: 1">
+          <label
+            style="
+              font-size: 0.85rem;
+              color: var(--text-secondary);
+              margin-bottom: 6px;
+              display: block;
+            "
+            >Fecha</label
+          >
+          <input
+            type="date"
+            name="date"
+            value="{{ service.date }}"
+            required
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px;
+              border-radius: 8px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-primary);
+              color: var(--text-primary);
+            "
+          />
+        </div>
+        <div style="flex: 1">
+          <label
+            style="
+              font-size: 0.85rem;
+              color: var(--text-secondary);
+              margin-bottom: 6px;
+              display: block;
+            "
+            >Kilometraje</label
+          >
+          <input
+            type="number"
+            name="mileage"
+            value="{{ service.mileage_at_service }}"
+            required
+            style="
+              width: 100%;
+              box-sizing: border-box;
+              padding: 10px;
+              border-radius: 8px;
+              border: 1px solid var(--border-color);
+              background: var(--bg-primary);
+              color: var(--text-primary);
+            "
+          />
+        </div>
+      </div>
+
+      <div>
+        <label
+          style="
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: block;
+          "
+          >Costo ($)</label
+        >
+        <input
+          type="number"
+          step="0.01"
+          name="cost"
+          value="{{ service.cost }}"
+          style="
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+          "
+        />
+      </div>
+
+      <div>
+        <label
+          style="
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            display: block;
+          "
+          >Notas</label
+        >
+        <textarea
+          name="notes"
+          rows="3"
+          style="
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+          "
+        >
+{{ service.notes }}</textarea
+        >
+      </div>
+
+      <div style="display: flex; gap: 8px; margin-top: 8px">
+        <a
+          href="{{ url_for('services_view') }}"
+          class="btn btn-secondary"
+          style="flex: 1; text-align: center; padding: 12px"
+          >Cancelar</a
+        >
+        <button
+          type="submit"
+          class="btn btn-primary"
+          style="flex: 2; padding: 12px"
+        >
+          Guardar Cambios
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+{% endblock %}

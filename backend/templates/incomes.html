@@ -1,0 +1,167 @@
+{% extends "base.html" %} {% block title %}Ingresos | MotoLog{% endblock %} {%
+block content %}
+<header class="fade-in" style="animation-delay: 0.1s">
+  <h1 class="page-title">Ingresos Laborales</h1>
+  <p class="text-muted mb-4">Registro de ganancias generadas con la moto.</p>
+</header>
+
+<section class="fade-in" style="animation-delay: 0.2s">
+  <!-- Add Income Form -->
+  <div
+    class="card fade-in mb-4"
+    style="padding: 16px; border: 1px dashed var(--border-color)"
+  >
+    <h4 style="margin: 0 0 16px 0">Registrar Ingreso</h4>
+    <form
+      action="{{ url_for('incomes_view') }}"
+      method="POST"
+      style="display: flex; flex-direction: column; gap: 12px"
+    >
+      <input
+        type="text"
+        name="description"
+        placeholder="Descripción (ej. Viaje Uber, Entrega iFood)"
+        required
+        class="form-control"
+        style="
+          padding: 10px;
+          border-radius: 8px;
+          border: 1px solid var(--border-color);
+          background: var(--bg-primary);
+          color: var(--text-primary);
+        "
+      />
+
+      <div style="display: flex; gap: 8px">
+        <input
+          type="number"
+          step="0.01"
+          name="amount"
+          placeholder="Monto ($)"
+          required
+          class="form-control"
+          style="
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+          "
+        />
+        <input
+          type="date"
+          name="date"
+          required
+          class="form-control"
+          style="
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+          "
+        />
+      </div>
+
+      <div style="display: flex; gap: 8px">
+        <input
+          type="text"
+          name="platform"
+          placeholder="Plataforma (Uber, Didi, Taller, etc.)"
+          class="form-control"
+          style="
+            flex: 2;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+          "
+        />
+        <input
+          type="number"
+          step="0.1"
+          name="hours"
+          placeholder="Horas"
+          class="form-control"
+          style="
+            flex: 1;
+            padding: 10px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+          "
+        />
+      </div>
+
+      <button type="submit" class="btn btn-primary mt-2">
+        Guardar Ingreso
+      </button>
+    </form>
+  </div>
+
+  <!-- Income List -->
+  <h3 style="font-size: 1.1rem; font-weight: 500; margin-bottom: 12px">
+    Historial de Ganancias
+  </h3>
+
+  {% if incomes %} {% for income in incomes %}
+  <div class="card fade-in" style="padding: 16px; margin-bottom: 8px">
+    <div class="flex-between">
+      <div style="display: flex; align-items: center; gap: 12px">
+        <div
+          style="
+            background: rgba(74, 222, 128, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+          "
+        >
+          <i
+            class="ph ph-hand-coins"
+            style="color: #4ade80; font-size: 1.2rem"
+          ></i>
+        </div>
+        <div>
+          <h4 style="font-size: 0.95rem; margin: 0">
+            {{ income.description }}
+          </h4>
+          <span class="text-muted" style="font-size: 0.8rem"
+            >{{ income.date }} • {{ income.platform or 'Personal' }}</span
+          >
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 12px">
+        <span style="font-weight: 600; color: #4ade80"
+          >+${{ "{:,.2f}".format(income.amount) }}</span
+        >
+        <form
+          action="{{ url_for('delete_income', income_id=income.id) }}"
+          method="POST"
+          onsubmit="return confirm('¿Eliminar este registro?');"
+        >
+          <button
+            type="submit"
+            style="
+              background: transparent;
+              border: none;
+              color: var(--text-secondary);
+              cursor: pointer;
+              font-size: 1.1rem;
+            "
+          >
+            <i class="ph ph-trash"></i>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %} {% else %}
+  <p class="text-muted text-center mt-4">No hay ingresos registrados.</p>
+  {% endif %}
+</section>
+
+<div style="height: 80px"></div>
+{% endblock %}

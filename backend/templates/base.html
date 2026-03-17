@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>{% block title %}MotoLog{% endblock %}</title>
+
+    <!-- Google Fonts: Professional Automotive/Tech -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Phosphor Icons (Minimalist modern icons) -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Custom CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/styles.css') }}"
+    />
+
+    <script>
+      // Apply theme early to prevent FOUC
+      if (localStorage.getItem("theme") === "light") {
+        document.documentElement.classList.add("light-theme");
+      }
+    </script>
+    {% block head %}{% endblock %}
+  </head>
+  <body>
+    <main class="container">{% block content %}{% endblock %}</main>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+      <a
+        href="{{ url_for('index') }}"
+        class="nav-item {% if request.path == '/' %}active{% endif %}"
+      >
+        <i class="ph ph-squares-four"></i>
+        <span>Inicio</span>
+      </a>
+      <a
+        href="{{ url_for('analytics_view') }}"
+        class="nav-item {% if request.path == '/analytics' %}active{% endif %}"
+      >
+        <i class="ph ph-chart-line-up"></i>
+        <span>Análisis</span>
+      </a>
+      <a
+        href="{{ url_for('services_view') }}"
+        class="nav-item {% if request.path == '/services' %}active{% endif %}"
+      >
+        <i class="ph ph-wrench"></i>
+        <span>Servicios</span>
+      </a>
+      <a
+        href="{{ url_for('trips_view') }}"
+        class="nav-item {% if request.path == '/trips' %}active{% endif %}"
+      >
+        <i class="ph ph-map-trifold"></i>
+        <span>Viajes</span>
+      </a>
+      <a
+        href="{{ url_for('expenses_view') }}"
+        class="nav-item {% if request.path == '/expenses' %}active{% endif %}"
+      >
+        <i class="ph ph-receipt"></i>
+        <span>Gastos</span>
+      </a>
+      <a
+        href="{{ url_for('incomes_view') }}"
+        class="nav-item {% if request.path == '/incomes' %}active{% endif %}"
+      >
+        <i class="ph ph-hand-coins"></i>
+        <span>Ingresos</span>
+      </a>
+      <a
+        href="{{ url_for('profile_view') }}"
+        class="nav-item {% if request.path == '/profile' %}active{% endif %}"
+      >
+        <i class="ph ph-user"></i>
+        <span>Perfil</span>
+      </a>
+    </nav>
+
+    {% block scripts %}{% endblock %}
+
+    <!-- Custom Magical Toast -->
+    <div id="magical-toast" class="magical-toast">
+      <div class="toast-indicator"></div>
+      <div class="toast-content">
+        <span id="toast-message">Mensaje</span>
+      </div>
+    </div>
+
+    <script>
+      function showMagicalToast(message, type = "info") {
+        const toast = document.getElementById("magical-toast");
+        const msgSpan = document.getElementById("toast-message");
+        msgSpan.textContent = message;
+
+        toast.className = "magical-toast show";
+        if (type === "warning") toast.classList.add("toast-warning");
+        if (type === "success") toast.classList.add("toast-success");
+
+        setTimeout(() => {
+          toast.className = "magical-toast";
+        }, 3000);
+      }
+    </script>
+  </body>
+</html>
