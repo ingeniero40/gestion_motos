@@ -158,16 +158,18 @@ def create_app():
         # --- Rendimiento de Gasolina (Último Tanque) ---
         fuel_expenses = [e for e in all_expenses if e.category == "Combustible"]
         fuel_expenses.sort(key=lambda x: x.date, reverse=True)
-        
+
         fuel_efficiency = 0
         total_fuel_gallons = 0
-        
+
         if fuel_expenses:
             last_fuel = fuel_expenses[0]
             total_fuel_gallons = last_fuel.liters
             # Distancia de viajes registrados en o después de la última recarga
-            dist_since_last_fuel = sum(t.distance_km for t in all_trips if t.date and t.date >= last_fuel.date)
-            
+            dist_since_last_fuel = sum(
+                t.distance_km for t in all_trips if t.date and t.date >= last_fuel.date
+            )
+
             if total_fuel_gallons > 0:
                 fuel_efficiency = dist_since_last_fuel / total_fuel_gallons
         total_km_validated = moto.current_mileage if moto else 0
@@ -197,7 +199,9 @@ def create_app():
             max_speed_record=max_speed_record,
             total_distance_trips=total_distance_trips,
             fuel_efficiency=round(fuel_efficiency, 2),
-            total_fuel_liters=round(total_fuel_gallons, 2), # Pasando galones al template
+            total_fuel_liters=round(
+                total_fuel_gallons, 2
+            ),  # Pasando galones al template
         )
 
     @app.route("/trips", methods=["GET", "POST"])
@@ -404,6 +408,7 @@ def create_app():
             service_type_lower = request.form.get("service_type", "").lower()
             if "aceite" in service_type_lower:
                 from motorcycles.services import motorcycle_service
+
                 moto.current_mileage = 0
                 motorcycle_service.update_by_id(moto.id, moto.to_dict())
 
@@ -643,13 +648,15 @@ def create_app():
 
         total_fuel_gallons = sum(e.liters for e in fuel_expenses)
         total_fuel_cost = sum(e.amount for e in fuel_expenses)
-        
+
         yield_kml = 0
         cost_per_km_fuel = 0
-        
+
         if fuel_expenses:
             last_fuel = fuel_expenses[0]
-            dist_since_last_fuel = sum(t.distance_km for t in all_trips if t.date and t.date >= last_fuel.date)
+            dist_since_last_fuel = sum(
+                t.distance_km for t in all_trips if t.date and t.date >= last_fuel.date
+            )
             if last_fuel.liters > 0:
                 yield_kml = dist_since_last_fuel / last_fuel.liters
             if dist_since_last_fuel > 0:
@@ -722,7 +729,7 @@ def create_app():
             )
 
         # --- 6. Análisis de Seguridad (Alertas de Velocidad) ---
-        speed_alerts_history = [t for t in all_trips if t.max_speed_kmh > 50]
+        speed_alerts_history = [t for t in all_trips if t.max_speed_kmh > 60]
         total_speed_alerts = len(speed_alerts_history)
         max_speed_record = max([t.max_speed_kmh for t in all_trips] + [0])
         recent_speed_alerts = sorted(
@@ -772,6 +779,3 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     # En desarrollo, debug=True permite recarga automática
     app.run(host="0.0.0.0", port=port, debug=True)
-
-
-
