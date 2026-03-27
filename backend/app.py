@@ -8,6 +8,46 @@ from datetime import datetime, timedelta
 load_dotenv()
 
 
+def normalize_metric(value, default=0.0, min_value=None, max_value=None, round_decimals=None):
+    """Valida y normaliza valores numéricos para evitar NaN/inf y valores inesperados."""
+    try:
+        val = float(value)
+    except (TypeError, ValueError):
+        val = float(default)
+
+    if val != val or val == float("inf") or val == float("-inf"):
+        val = float(default)
+
+    if min_value is not None:
+        val = max(min_value, val)
+    if max_value is not None:
+        val = min(max_value, val)
+
+    if round_decimals is not None:
+        val = round(val, round_decimals)
+
+    return val
+
+
+def parse_date(value):
+    """Intenta normalizar fechas a datetime.date para comparación robusta."""
+    if not value:
+        return None
+
+    if isinstance(value, str):
+        # date-only y datetime ISO
+        for fmt in ("%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"):
+            try:
+                return datetime.strptime(value[:19], fmt).date() if fmt != "%Y-%m-%d" else datetime.strptime(value, fmt).date()
+            except (ValueError, TypeError):
+                continue
+
+    if isinstance(value, datetime):
+        return value.date()
+
+    return None
+
+
 def create_app():
     """
     Application factory for the Flask backend.
@@ -152,35 +192,57 @@ def create_app():
 
         # --- Viajes y Velocidad ---
         all_trips = trip_service.get_by_motorcycle_id(moto.id) if moto else []
-        max_speed_record = max([t.max_speed_kmh for t in all_trips] + [0])
-        total_distance_trips = sum(t.distance_km for t in all_trips)
+        max_speed_record = int(
+            normalize_metric(
+                max([normalize_metric(getattr(t, 'max_speed_kmh', 0), default=0, min_value=0) for t in all_trips] + [0]),
+                default=0,
+                min_value=0,
+            )
+        )
+        total_distance_trips = normalize_metric(
+            sum(normalize_metric(getattr(t, 'distance_km', 0), default=0, min_value=0) for t in all_trips),
+            default=0,
+            min_value=0,
+        )
 
         # --- Rendimiento de Gasolina (Último Tanque) ---
-        fuel_expenses = [e for e in all_expenses if e.category == "Combustible"]
-        fuel_expenses.sort(key=lambda x: x.date, reverse=True)
+        fuel_expenses = [
+            e for e in all_expenses if getattr(e, 'category', '').lower() == "combustible"
+        ]
+        fuel_expenses.sort(key=lambda x: getattr(x, 'date', ''), reverse=True)
 
         fuel_efficiency = 0
         total_fuel_gallons = 0
 
         if fuel_expenses:
             last_fuel = fuel_expenses[0]
-            total_fuel_gallons = last_fuel.liters
+            total_fuel_gallons = normalize_metric(getattr(last_fuel, 'liters', 0), default=0, min_value=0)
+            last_fuel_date = parse_date(getattr(last_fuel, 'date', ''))
             # Distancia de viajes registrados en o después de la última recarga
-            dist_since_last_fuel = sum(
-                t.distance_km for t in all_trips if t.date and t.date >= last_fuel.date
+            dist_since_last_fuel = normalize_metric(
+                sum(
+                    normalize_metric(getattr(t, 'distance_km', 0), default=0, min_value=0)
+                    for t in all_trips
+                    if parse_date(getattr(t, 'date', '')) is not None
+                    and last_fuel_date is not None
+                    and parse_date(getattr(t, 'date', '')) >= last_fuel_date
+                ),
+                default=0,
+                min_value=0,
             )
 
             if total_fuel_gallons > 0:
                 fuel_efficiency = dist_since_last_fuel / total_fuel_gallons
-        total_km_validated = moto.current_mileage if moto else 0
+                # evitar tocar valores anormales al dividir
+                fuel_efficiency = normalize_metric(fuel_efficiency, default=0, min_value=0)
+
+        total_km_validated = normalize_metric(getattr(moto, 'current_mileage', 0), default=0, min_value=0)
         oil_life = 0
 
         if moto:
             # Cálculo de Vida de Aceite: El odómetro actual es directamente la distancia desde el último cambio!
-            interval = (
-                moto.oil_change_interval if moto.oil_change_interval > 0 else 1500
-            )
-            oil_life = max(0, 100 - (total_km_validated / interval) * 100)
+            interval = normalize_metric(getattr(moto, 'oil_change_interval', 1500), default=1500, min_value=1)
+            oil_life = normalize_metric(100 - (total_km_validated / interval) * 100, default=0, min_value=0, max_value=100)
 
         return render_template(
             "index.html",
@@ -707,7 +769,7 @@ def create_app():
             alerts.append(
                 {
                     "type": "warning",
-                    "msg": f"Bajo rendimiento de combutible detectado ({int(yield_kml)} km/Gal)",
+                    "msg": f"Bajo rendimiento de combutible detectado ({int(yield_kml)} km/L)",
                 }
             )
 
