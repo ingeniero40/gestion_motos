@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict, Any
 from .models import MaintenanceRecord
 from infrastructure.db import get_db_connection
+from psycopg2.extras import RealDictCursor
 
 
 class MaintenanceService:
@@ -21,11 +22,11 @@ class MaintenanceService:
 
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(
                 """
                 INSERT INTO maintenance (id, motorcycle_id, service_type, date, mileage_at_service, cost, notes)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
                 (
                     new_record.id,
@@ -71,9 +72,9 @@ class MaintenanceService:
         conn = get_db_connection()
         records = []
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(
-                "SELECT * FROM maintenance WHERE motorcycle_id = ?", (motorcycle_id,)
+                "SELECT * FROM maintenance WHERE motorcycle_id = %s", (motorcycle_id,)
             )
             rows = cursor.fetchall()
             for row in rows:
@@ -95,8 +96,8 @@ class MaintenanceService:
         """Obtiene un registro de mantenimiento por su ID."""
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM maintenance WHERE id = ?", (record_id,))
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute("SELECT * FROM maintenance WHERE id = %s", (record_id,))
             row = cursor.fetchone()
             if row:
                 from .models import MaintenanceRecord
@@ -119,12 +120,12 @@ class MaintenanceService:
         """Actualiza un registro de mantenimiento por su ID."""
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(
                 """
                 UPDATE maintenance
-                SET service_type = ?, date = ?, mileage_at_service = ?, cost = ?, notes = ?
-                WHERE id = ?
+                SET service_type = %s, date = %s, mileage_at_service = %s, cost = %s, notes = %s
+                WHERE id = %s
             """,
                 (
                     data.get("service_type", ""),
@@ -144,8 +145,8 @@ class MaintenanceService:
         """Elimina un registro de mantenimiento por su ID."""
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM maintenance WHERE id = ?", (record_id,))
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute("DELETE FROM maintenance WHERE id = %s", (record_id,))
             conn.commit()
             return cursor.rowcount > 0
         finally:

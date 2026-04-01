@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict, Any
 from .models import Motorcycle
 from infrastructure.db import get_db_connection
+from psycopg2.extras import RealDictCursor
 
 
 class MotorcycleService:
@@ -21,11 +22,11 @@ class MotorcycleService:
 
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(
                 """
                 INSERT INTO motorcycles (id, make, model, year, vin, current_mileage, oil_change_interval)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
                 (
                     new_moto.id,
@@ -48,7 +49,7 @@ class MotorcycleService:
         conn = get_db_connection()
         motos = []
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute("SELECT * FROM motorcycles")
             rows = cursor.fetchall()
             for row in rows:
@@ -70,8 +71,8 @@ class MotorcycleService:
         """Obtiene el detalle de una motocicleta específica."""
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM motorcycles WHERE id = ?", (moto_id,))
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute("SELECT * FROM motorcycles WHERE id = %s", (moto_id,))
             row = cursor.fetchone()
             if row:
                 moto = Motorcycle(
@@ -96,8 +97,8 @@ class MotorcycleService:
             cursor.execute(
                 """
                 UPDATE motorcycles
-                SET make = ?, model = ?, year = ?, vin = ?, current_mileage = ?, oil_change_interval = ?
-                WHERE id = ?
+                SET make = %s, model = %s, year = %s, vin = %s, current_mileage = %s, oil_change_interval = %s
+                WHERE id = %s
             """,
                 (
                     data.get("make", ""),

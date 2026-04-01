@@ -2,6 +2,7 @@ from typing import List, Optional, Dict, Any
 from datetime import datetime
 from .models import Trip
 from infrastructure.db import get_db_connection
+from psycopg2.extras import RealDictCursor
 
 
 def _parse_date(value: Optional[str]) -> Optional[datetime.date]:
@@ -40,11 +41,11 @@ class TripService:
 
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(
                 """
                 INSERT INTO trips (id, motorcycle_id, distance_km, max_speed_kmh, date, title, description)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
                 (
                     new_trip.id,
@@ -67,7 +68,7 @@ class TripService:
         conn = get_db_connection()
         trips = []
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute("SELECT * FROM trips")
             rows = cursor.fetchall()
             for row in rows:
@@ -89,8 +90,8 @@ class TripService:
         """Obtiene el detalle de un viaje específico."""
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM trips WHERE id = ?", (trip_id,))
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute("SELECT * FROM trips WHERE id = %s", (trip_id,))
             row = cursor.fetchone()
             if row:
                 trip = Trip(
@@ -112,9 +113,9 @@ class TripService:
         conn = get_db_connection()
         trips = []
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(
-                "SELECT * FROM trips WHERE motorcycle_id = ?", (motorcycle_id,)
+                "SELECT * FROM trips WHERE motorcycle_id = %s", (motorcycle_id,)
             )
             rows = cursor.fetchall()
             for row in rows:
@@ -167,9 +168,9 @@ class TripService:
         """Obtiene el último viaje registrado para una motocicleta."""
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(
-                "SELECT * FROM trips WHERE motorcycle_id = ? ORDER BY ROWID DESC LIMIT 1",
+                "SELECT * FROM trips WHERE motorcycle_id = %s ORDER BY id DESC LIMIT 1",
                 (motorcycle_id,),
             )
             row = cursor.fetchone()
@@ -192,12 +193,12 @@ class TripService:
         """Actualiza un viaje existente."""
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(
                 """
                 UPDATE trips 
-                SET title = ?, date = ?, distance_km = ?, max_speed_kmh = ?, description = ?
-                WHERE id = ?
+                SET title = %s, date = %s, distance_km = %s, max_speed_kmh = %s, description = %s
+                WHERE id = %s
             """,
                 (
                     data.get("title"),
@@ -217,8 +218,8 @@ class TripService:
         """Elimina un viaje por ID."""
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM trips WHERE id = ?", (trip_id,))
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute("DELETE FROM trips WHERE id = %s", (trip_id,))
             conn.commit()
             return cursor.rowcount > 0
         finally:

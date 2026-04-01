@@ -3,6 +3,7 @@ from flask import Flask, jsonify, render_template, redirect, url_for
 from flask_cors import CORS
 from dotenv import load_dotenv
 from datetime import datetime, timedelta
+from psycopg2.extras import RealDictCursor
 
 # Cargar variables de entorno
 load_dotenv()
@@ -584,8 +585,8 @@ def create_app():
 
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM incomes WHERE id = ?", (income_id,))
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute("DELETE FROM incomes WHERE id = %s", (income_id,))
             conn.commit()
         finally:
             conn.close()

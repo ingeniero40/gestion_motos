@@ -1,13 +1,20 @@
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
 import os
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "..", "motolog.db")
+# Configuración de PostgreSQL
+DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_NAME = os.getenv("DB_NAME", "motolog")
+DB_USER = os.getenv("DB_USER", "postgres")
+DB_PASSWORD = os.getenv("DB_PASSWORD") or input("Ingresa la contraseña de PostgreSQL: ")
+DB_PORT = int(os.getenv("DB_PORT", 5432))
 
 
 def get_db_connection():
-    """Establece una conexión con la base de datos SQLite y retorna el objeto de conexión."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row  # Permite acceder a las columnas por nombre
+    """Establece una conexión con la base de datos PostgreSQL y retorna el objeto de conexión."""
+    conn = psycopg2.connect(
+        host=DB_HOST, database=DB_NAME, user=DB_USER, password=DB_PASSWORD, port=DB_PORT
+    )
     return conn
 
 
@@ -15,7 +22,7 @@ def init_db():
     """Inicializa la estructura de la base de datos (DDL)."""
     conn = get_db_connection()
     try:
-        cursor = conn.cursor()
+        cursor = conn.cursor(cursor_factory=RealDictCursor)
 
         # Tabla Motorcycles
         cursor.execute(
@@ -32,13 +39,10 @@ def init_db():
         """
         )
 
-        # Migración: Añadir columna si no existe (SQLite no soporta ADD COLUMN IF NOT EXISTS)
-        try:
-            cursor.execute(
-                "ALTER TABLE motorcycles ADD COLUMN oil_change_interval INTEGER DEFAULT 5000"
-            )
-        except sqlite3.OperationalError:
-            pass  # La columna ya existe
+        # Migración: Añadir columna si no existe
+        cursor.execute(
+            "ALTER TABLE motorcycles ADD COLUMN IF NOT EXISTS oil_change_interval INTEGER DEFAULT 5000"
+        )
 
         # Tabla Trips
         cursor.execute(
@@ -89,10 +93,9 @@ def init_db():
         )
 
         # Migración: Añadir columna liters si no existe
-        try:
-            cursor.execute("ALTER TABLE expenses ADD COLUMN liters REAL DEFAULT 0.0")
-        except sqlite3.OperationalError:
-            pass
+        cursor.execute(
+            "ALTER TABLE expenses ADD COLUMN IF NOT EXISTS liters REAL DEFAULT 0.0"
+        )
 
         # Tabla Incomes (Ingresos)
         cursor.execute(
@@ -126,9 +129,9 @@ def init_db():
 
         # Insertar configuración por defecto si no existe
         cursor.execute("SELECT COUNT(*) FROM settings")
-        if cursor.fetchone()[0] == 0:
+        if cursor.fetchone()['count'] == 0:
             cursor.execute(
-                "INSERT INTO settings (id, dark_mode, currency, measure_unit, speed_threshold) VALUES (?, ?, ?, ?, ?)",
+                "INSERT INTO settings (id, dark_mode, currency, measure_unit, speed_threshold) VALUES (%s, %s, %s, %s, %s)",
                 ("default", 1, "USD", "km", 50.0),
             )
 

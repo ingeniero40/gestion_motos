@@ -1,6 +1,7 @@
 from typing import List, Optional, Dict, Any
 from .models import Expense
 from infrastructure.db import get_db_connection
+from psycopg2.extras import RealDictCursor
 
 
 class ExpenseService:
@@ -21,11 +22,11 @@ class ExpenseService:
 
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(
                 """
                 INSERT INTO expenses (id, motorcycle_id, amount, category, date, description, liters)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
             """,
                 (
                     new_expense.id,
@@ -48,7 +49,7 @@ class ExpenseService:
         conn = get_db_connection()
         expenses = []
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute("SELECT * FROM expenses")
             rows = cursor.fetchall()
             for row in rows:
@@ -71,9 +72,9 @@ class ExpenseService:
         conn = get_db_connection()
         expenses = []
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(
-                "SELECT * FROM expenses WHERE motorcycle_id = ?", (motorcycle_id,)
+                "SELECT * FROM expenses WHERE motorcycle_id = %s", (motorcycle_id,)
             )
             rows = cursor.fetchall()
             for row in rows:
@@ -95,8 +96,8 @@ class ExpenseService:
         """Obtiene un gasto por su ID."""
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM expenses WHERE id = ?", (expense_id,))
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute("SELECT * FROM expenses WHERE id = %s", (expense_id,))
             row = cursor.fetchone()
             if row:
                 from .models import Expense
@@ -119,12 +120,12 @@ class ExpenseService:
         """Actualiza un gasto existente por su ID."""
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(
                 """
                 UPDATE expenses
-                SET amount = ?, category = ?, date = ?, description = ?, liters = ?
-                WHERE id = ?
+                SET amount = %s, category = %s, date = %s, description = %s, liters = %s
+                WHERE id = %s
             """,
                 (
                     float(data.get("amount", 0)),
@@ -144,8 +145,8 @@ class ExpenseService:
         """Elimina un gasto por su ID."""
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM expenses WHERE id = ?", (expense_id,))
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            cursor.execute("DELETE FROM expenses WHERE id = %s", (expense_id,))
             conn.commit()
             return cursor.rowcount > 0
         finally:

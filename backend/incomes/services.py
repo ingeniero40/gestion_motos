@@ -1,18 +1,19 @@
 import uuid
 from typing import List, Dict, Any
 from infrastructure.db import get_db_connection
+from psycopg2.extras import RealDictCursor
 
 
 class IncomeService:
     def create(self, data: Dict[str, Any]):
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             id = str(uuid.uuid4())
             cursor.execute(
                 """
                 INSERT INTO incomes (id, motorcycle_id, amount, date, description, platform, hours_worked)
-                VALUES (?, ?, ?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
                 """,
                 (
                     id,
@@ -31,9 +32,9 @@ class IncomeService:
     def get_by_motorcycle_id(self, motorcycle_id: str) -> List[Dict[str, Any]]:
         conn = get_db_connection()
         try:
-            cursor = conn.cursor()
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
             cursor.execute(
-                "SELECT * FROM incomes WHERE motorcycle_id = ?", (motorcycle_id,)
+                "SELECT * FROM incomes WHERE motorcycle_id = %s", (motorcycle_id,)
             )
             rows = [dict(row) for row in cursor.fetchall()]
             return rows
