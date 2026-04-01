@@ -192,6 +192,20 @@ def create_app():
 
         # --- Viajes y Velocidad ---
         all_trips = trip_service.get_by_motorcycle_id(moto.id) if moto else []
+
+        # Soporte de rango de fechas para cálculo total de kilómetros (ISO y dd/mm/yyyy).
+        selected_start_date = request.args.get('start_date')
+        selected_end_date = request.args.get('end_date')
+
+        if selected_start_date and selected_end_date and moto:
+            filtered_distance = trip_service.get_total_distance_by_date_range(
+                moto.id,
+                selected_start_date,
+                selected_end_date,
+            )
+        else:
+            filtered_distance = sum(normalize_metric(getattr(t, 'distance_km', 0), default=0, min_value=0) for t in all_trips)
+
         max_speed_record = int(
             normalize_metric(
                 max([normalize_metric(getattr(t, 'max_speed_kmh', 0), default=0, min_value=0) for t in all_trips] + [0]),
@@ -200,12 +214,16 @@ def create_app():
             )
         )
         total_distance_trips = normalize_metric(
-            sum(normalize_metric(getattr(t, 'distance_km', 0), default=0, min_value=0) for t in all_trips),
+            filtered_distance,
             default=0,
             min_value=0,
         )
 
-        # --- Rendimiento de Gasolina (Último Tanque) ---
+        # Odómetro: suma de kilómetros en el rango fijo 2026-02-08 a 2026-03-31
+        fixed_range_distance = trip_service.get_total_distance_by_date_range(
+            moto.id, '2026-02-08', '2026-03-31'
+        ) if moto else 0
+        total_km_validated = normalize_metric(fixed_range_distance, default=0, min_value=0)
         fuel_expenses = [
             e for e in all_expenses if getattr(e, 'category', '').lower() == "combustible"
         ]
@@ -236,7 +254,6 @@ def create_app():
                 # evitar tocar valores anormales al dividir
                 fuel_efficiency = normalize_metric(fuel_efficiency, default=0, min_value=0)
 
-        total_km_validated = normalize_metric(getattr(moto, 'current_mileage', 0), default=0, min_value=0)
         oil_life = 0
 
         if moto:

@@ -1,6 +1,25 @@
 from typing import List, Optional, Dict, Any
+from datetime import datetime
 from .models import Trip
 from infrastructure.db import get_db_connection
+
+
+def _parse_date(value: Optional[str]) -> Optional[datetime.date]:
+    """Parsea una fecha en varios formatos comunes y normaliza a datetime.date."""
+    if not value:
+        return None
+
+    if isinstance(value, datetime):
+        return value.date()
+
+    if isinstance(value, str):
+        for fmt in ("%Y-%m-%d", "%d/%m/%Y", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"):
+            try:
+                return datetime.strptime(value[:19] if fmt != "%d/%m/%Y" else value, fmt).date()
+            except (ValueError, TypeError):
+                continue
+
+    return None
 
 
 class TripService:
@@ -112,6 +131,37 @@ class TripService:
         finally:
             conn.close()
         return trips
+
+    def get_trips_by_motorcycle_and_date_range(
+        self,
+        motorcycle_id: str,
+        start_date: Optional[str],
+        end_date: Optional[str],
+    ) -> List[Trip]:
+        """Retorna viajes de una motocicleta en un rango de fechas, con parseo robusto."""
+        parsed_start = _parse_date(start_date)
+        parsed_end = _parse_date(end_date)
+
+        all_trips = self.get_by_motorcycle_id(motorcycle_id)
+        if parsed_start is None or parsed_end is None:
+            return all_trips
+
+        return [
+            t
+            for t in all_trips
+            if (trip_date := _parse_date(t.date)) is not None
+            and parsed_start <= trip_date <= parsed_end
+        ]
+
+    def get_total_distance_by_date_range(
+        self,
+        motorcycle_id: str,
+        start_date: Optional[str],
+        end_date: Optional[str],
+    ) -> float:
+        """Suma distancia_km de los viajes en un rango de fechas dado."""
+        trips = self.get_trips_by_motorcycle_and_date_range(motorcycle_id, start_date, end_date)
+        return sum(float(getattr(t, "distance_km", 0) or 0) for t in trips)
 
     def get_last_by_motorcycle_id(self, motorcycle_id: str) -> Optional[Trip]:
         """Obtiene el último viaje registrado para una motocicleta."""

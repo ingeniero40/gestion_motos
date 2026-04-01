@@ -34,7 +34,13 @@ block content %}
         <span class="text-muted" style="font-size: 0.75rem">KM Totales</span>
       </div>
       <div style="font-size: 1.4rem; font-weight: 700">
-        {{ "{:,}".format(total_km_validated) if moto else "0" }}
+        {{ "{:,}".format(total_distance_trips) if moto else "0" }}
+      </div>
+      <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 6px;">
+        KM viajes (rango): {{ "{:,}".format(total_distance_trips) if moto else "0" }} km
+      </div>
+      <div style="font-size: 0.7rem; color: var(--text-secondary);">
+        KM odómetro: {{ "{:,}".format(total_km_validated) if moto else "0" }} km
       </div>
     </div>
 
