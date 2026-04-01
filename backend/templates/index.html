@@ -31,17 +31,16 @@ block content %}
           class="ph ph-gauge"
           style="color: var(--accent-blue); font-size: 1.5rem"
         ></i>
-        <span class="text-muted" style="font-size: 0.75rem">KM Totales</span>
+        <span class="text-muted" style="font-size: 0.75rem">KM Odómetro</span>
       </div>
       <div style="font-size: 1.4rem; font-weight: 700">
-        {{ "{:,}".format(total_distance_trips) if moto else "0" }}
+        {{ "{:,}".format(total_km_validated) if moto else "0" }} Km
+        
       </div>
       <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 6px;">
         KM viajes (rango): {{ "{:,}".format(total_distance_trips) if moto else "0" }} km
       </div>
-      <div style="font-size: 0.7rem; color: var(--text-secondary);">
-        KM odómetro: {{ "{:,}".format(total_km_validated) if moto else "0" }} km
-      </div>
+      
     </div>
 
     <!-- Oil Life -->
